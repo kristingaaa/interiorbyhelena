@@ -243,6 +243,12 @@
             <p class="error" id="e-message" hidden></p>
           </div>
 
+          <!-- hCaptcha via Web3Forms (compact så den får plats på smala mobiler) -->
+          <div class="field">
+            <div class="h-captcha" data-captcha="true" data-size="compact"></div>
+            <p class="error" id="e-captcha" hidden></p>
+          </div>
+
           <!-- Honeypot mot spam: dolt för människor, botar fyller ofta i det -->
           <div class="hp" aria-hidden="true"><label>Lämna tomt <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off"></label></div>
 
@@ -269,5 +275,6 @@
   <noscript><p class="noscript">Denna sida kräver JavaScript för att visa innehållet. / This page requires JavaScript to display its content.</p></noscript>
   <script src="i18n.js"></script>
   <script src="app.js"></script>
+  <script src="https://web3forms.com/client/script.js" async defer></script>
 </body>
 </html>

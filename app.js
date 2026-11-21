@@ -59,6 +59,11 @@
   // Vilka fält som just nu visar fel, så att texten kan översättas vid språkbyte
   const invalid = new Set();
 
+  // hCaptcha lägger själv in en textarea "h-captcha-response" i formuläret när rutan är ikryssad
+  const captchaError = $("#e-captcha");
+  const captchaToken = () => { const el = form.querySelector('[name="h-captcha-response"]'); return el ? el.value : ""; };
+  const resetCaptcha = () => { if (window.hcaptcha) { try { window.hcaptcha.reset(); } catch (e) { /* ignoreras */ } } };
+
   function showError(name) {
     const f = fields[name];
     f.input.setAttribute("aria-invalid", "true");
@@ -98,8 +103,12 @@
       if (fields[name].valid(fields[name].input.value)) clearError(name);
       else { showError(name); first = first || fields[name].input; }
     });
+    const captchaOk = captchaToken() !== "";
+    captchaError.textContent = t("err.captcha");
+    captchaError.hidden = captchaOk;
     renderSummary();
     if (first) { first.focus(); return; }
+    if (!captchaOk) return;
 
     const pkgSelect = $("#f-package");
     const submitBtn = $("button[type=submit]", form);
@@ -125,6 +134,7 @@
       fail.textContent = t("f.fail");
       fail.hidden = false;
     } finally {
+      resetCaptcha(); // token kan bara användas en gång
       submitBtn.disabled = false;
       submitBtn.textContent = t("f.submit");
     }
@@ -148,6 +158,7 @@
     renderSummary();
     if (!ok.hidden) ok.textContent = t("f.ok");
     if (!fail.hidden) fail.textContent = t("f.fail");
+    if (!captchaError.hidden) captchaError.textContent = t("err.captcha");
     applyFilter();
   });
   initLang();

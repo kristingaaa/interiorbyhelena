@@ -243,9 +243,13 @@
             <p class="error" id="e-message" hidden></p>
           </div>
 
+          <!-- Honeypot mot spam: dolt för människor, botar fyller ofta i det -->
+          <div class="hp" aria-hidden="true"><label>Lämna tomt <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off"></label></div>
+
           <button class="btn" type="submit" data-i18n="f.submit"></button>
           <p class="hint" data-i18n="f.hint"></p>
           <p class="success" id="form-ok" role="status" hidden></p>
+          <p class="form-summary" id="form-fail" role="alert" hidden></p>
         </form>
       </div>
     </section>

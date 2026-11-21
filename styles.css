@@ -239,3 +239,6 @@ input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: #9b2c2
   .tools { gap: 4px; }
   .lang button { min-width: 36px; padding-inline: 6px; }
 }
+
+/* Honeypot: utanför skärmen, men inte display:none (botar hoppar över dolda fält) */
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }

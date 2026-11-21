@@ -1,0 +1,46 @@
+# Publicerar sidan till GitHub Pages och sätter in Web3Forms-nyckeln från repository secret.
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bygg sidan och sätt in nyckeln
+        env:
+          WEB3FORMS_KEY: ${{ secrets.WEB3FORMS_KEY }}
+        run: |
+          if [ -z "$WEB3FORMS_KEY" ]; then
+            echo "::error::Secret WEB3FORMS_KEY saknas (Settings → Secrets and variables → Actions)"
+            exit 1
+          fi
+          mkdir dist
+          cp index.html styles.css app.js i18n.js dist/
+          sed -i "s|__WEB3FORMS_KEY__|${WEB3FORMS_KEY}|" dist/app.js
+          grep -q "__WEB3FORMS_KEY__" dist/app.js && { echo "::error::Plassholder ble ikke byttet ut"; exit 1; } || true
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

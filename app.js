@@ -48,6 +48,9 @@
   const form = $("#contact-form");
   const summary = $("#form-summary");
   const ok = $("#form-ok");
+  const fail = $("#form-fail");
+  // Plassholder byts ut med repository secret WEB3FORMS_KEY när siden publiseras (se .github/workflows/pages.yml)
+  const WEB3FORMS_KEY = "__WEB3FORMS_KEY__";
   const fields = {
     name: { input: $("#f-name"), error: $("#e-name"), key: "err.name", valid: v => v.trim().length >= 2 },
     email: { input: $("#f-email"), error: $("#e-email"), key: "err.email", valid: v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim()) },
@@ -86,9 +89,10 @@
     });
   });
 
-  form.addEventListener("submit", e => {
+  form.addEventListener("submit", async e => {
     e.preventDefault();
     ok.hidden = true;
+    fail.hidden = true;
     let first = null;
     Object.keys(fields).forEach(name => {
       if (fields[name].valid(fields[name].input.value)) clearError(name);
@@ -98,19 +102,32 @@
     if (first) { first.focus(); return; }
 
     const pkgSelect = $("#f-package");
-    const pkgLabel = pkgSelect.value ? pkgSelect.options[pkgSelect.selectedIndex].textContent : "";
-    const body = [
-      t("mail.name") + ": " + fields.name.input.value.trim(),
-      t("mail.email") + ": " + fields.email.input.value.trim(),
-      pkgLabel ? t("mail.package") + ": " + pkgLabel : "",
-      "",
-      fields.message.input.value.trim()
-    ].filter((line, i) => line !== "" || i === 3).join("\n");
+    const submitBtn = $("button[type=submit]", form);
+    const data = new FormData(form);
+    data.append("access_key", WEB3FORMS_KEY);
+    data.append("subject", "Förfrågan från H.A Concept");
+    data.append("from_name", "H.A Concept");
+    data.append("tjänst", pkgSelect.value ? pkgSelect.options[pkgSelect.selectedIndex].textContent : "-");
+    data.append("språk", currentLang);
 
-    ok.textContent = t("f.ok");
-    ok.hidden = false;
-    window.location.href = "mailto:hej@haconcept.se?subject=" + encodeURIComponent(t("mail.subject")) +
-      "&body=" + encodeURIComponent(body);
+    submitBtn.disabled = true;
+    submitBtn.textContent = t("f.sending");
+    try {
+      if (!WEB3FORMS_KEY || WEB3FORMS_KEY.startsWith("__")) throw new Error("Web3Forms-nyckeln är inte inlagd (lokal körning utan bygge)");
+      const res = await fetch("https://api.web3forms.com/submit", { method: "POST", body: data, headers: { Accept: "application/json" } });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.message || "Skickandet misslyckades");
+      form.reset();
+      ok.textContent = t("f.ok");
+      ok.hidden = false;
+    } catch (err) {
+      console.warn(err.message);
+      fail.textContent = t("f.fail");
+      fail.hidden = false;
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = t("f.submit");
+    }
   });
 
   /* ---------- Scroll-reveal ---------- */
@@ -130,6 +147,7 @@
     invalid.forEach(name => { fields[name].error.textContent = t(fields[name].key); });
     renderSummary();
     if (!ok.hidden) ok.textContent = t("f.ok");
+    if (!fail.hidden) fail.textContent = t("f.fail");
     applyFilter();
   });
   initLang();
